@@ -50,16 +50,15 @@ const getFeedAds = async (req, res) => {
   }
 };
 
-const getAdsByUser = async(req,res) => {
-  const userId = req.query;
-  try{
-    const ads = await Ad.find(userId);
-    res.status(200).json(ads)
-
-  } catch(err){
-    res.status(404).json({message: err.message})
+const getAdsByUser = async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const ads = await Ad.find({ userId: userId });
+    res.status(200).json(ads);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
   }
-}
+};
 
 const searchFeedAds = async (req, res) => {
   try {
@@ -74,10 +73,66 @@ const searchFeedAds = async (req, res) => {
 const searchAdsByCategory = async (req, res) => {
   try {
     const filters = req.query.search;
-    const filteredAds = await Ad.find({category: filters});
+    const filteredAds = await Ad.find({ category: filters });
     res.status(200).json(filteredAds);
   } catch (err) {
     res.status(404).json({ message: err.message });
   }
 };
-module.exports = { createAd, getFeedAds, searchFeedAds, searchAdsByCategory, getAdsByUser };
+
+const addToFavourites = async (req, res) => {
+  try {
+    const { userId, adId } = req.body;
+
+    const user = await User.findOne({ _id: userId }).exec();
+    if (!user) {
+      return res.status(204).json({ message: `No User Matches ID ${userId}` });
+    }
+    const ad = await Ad.findOne({ _id: adId }).exec();
+    if (!ad) {
+      return res.status(204).json({ message: `No User Matches ID ${adId}` });
+    }
+    user.favouriteAds.push(ad);
+    const result = await user.save();
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+const removeFromFavourites = async (req, res) => {
+  try {
+    const { userId, adId } = req.body;
+
+    const user = await User.findOne({ _id: userId }).exec();
+    if (!user) {
+      return res.status(204).json({ message: `No User Matches ID ${userId}` });
+    }
+    const ad = await Ad.findOne({ _id: adId }).exec();
+    if (!ad) {
+      return res.status(204).json({ message: `No User Matches ID ${adId}` });
+    }
+    user.favouriteAds = user.favouriteAds.filter((item) => {
+      return item !== ad;
+    });
+    const result = await user.save();
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+const checkFavouriteAds = (req,res) => {
+
+  
+}
+
+module.exports = {
+  createAd,
+  getFeedAds,
+  searchFeedAds,
+  searchAdsByCategory,
+  getAdsByUser,
+  addToFavourites,
+  removeFromFavourites,
+};
