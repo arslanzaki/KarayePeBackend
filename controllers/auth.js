@@ -13,6 +13,7 @@ const register = async (req, res) => {
       name,
       email,
       password,
+      phoneNumber,
       picturePath,
       isVerified,
       accountType,
@@ -31,6 +32,7 @@ const register = async (req, res) => {
       name,
       email,
       password: passwordHash,
+      phoneNumber,
       picturePath,
       isVerified,
       accountType,
@@ -123,4 +125,22 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, getAllUsers, getUser, setProfilePicture };
+const setAccountType = async (req, res) => {
+  try {
+    const { userId, accountType } = req.body;
+    const user = await User.findOne({ _id: userId }).exec();
+    user.accountType = accountType;
+    const result = await user.save();
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+module.exports = {
+  register,
+  login,
+  getAllUsers,
+  getUser,
+  setProfilePicture,
+  setAccountType,
+};
