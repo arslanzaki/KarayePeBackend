@@ -20,6 +20,7 @@ const register = async (req, res) => {
       favouriteAds,
       location,
       occupation,
+      allmessages
     } = req.body;
 
     const duplicateUser = await User.findOne({ email }).exec();
@@ -39,6 +40,7 @@ const register = async (req, res) => {
       favouriteAds,
       location,
       occupation,
+      allmessages
     });
     const savedUser = await newUser.save();
     res.status(201).json(savedUser);

@@ -39,24 +39,27 @@ const userSchema = new mongoose.Schema(
       Seller: Number,
     },
     favouriteAds: {
-        type: Array,
-        required: false,
-        default: []
+      type: Array,
+      required: false,
+      default: [],
     },
     location: {
-        type: String,
-        default: ""
+      type: String,
+      default: "",
     },
     occupation: {
-        type: String,
-        default: ""
-    }
+      type: String,
+      default: "",
+    },
+    allmessages: {
+      type: Array,
+      default: [],
+    },
   },
   {
     timestamps: true,
   }
 );
-
 
 const User = mongoose.model("User", userSchema);
 module.exports = User;

@@ -13,6 +13,9 @@ const createAd = async (req, res) => {
       itemRent,
       rentDuration,
       securityRequirement,
+      city,
+      address,
+      location,
     } = req.body;
 
     const user = await User.findById(userId);
@@ -27,6 +30,9 @@ const createAd = async (req, res) => {
       itemRent,
       rentDuration,
       securityRequirement,
+      city,
+      address,
+      location,
     });
 
     await newAd.save();
@@ -80,59 +86,47 @@ const searchAdsByCategory = async (req, res) => {
   }
 };
 
-const addToFavourites = async (req, res) => {
+const searchAdsByCity = async (req, res) => {
   try {
-    const { userId, adId } = req.body;
+    const filters = req.query.search;
+    const filteredAds = await Ad.find({ city: filters });
+    res.status(200).json(filteredAds);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
 
-    const user = await User.findOne({ _id: userId }).exec();
-    if (!user) {
-      return res.status(204).json({ message: `No User Matches ID ${userId}` });
+const deleteAd = async (req, res) => {
+  try {
+    if (!req?.body?.id) {
+      return res.status(400).json({ message: "ID parameter is required!" });
     }
-    const ad = await Ad.findOne({ _id: adId }).exec();
+    const ad = await Ad.findOne({ _id: req.body.id }).exec();
     if (!ad) {
-      return res.status(204).json({ message: `No User Matches ID ${adId}` });
+      return res
+        .status(204)
+        .json({ message: `No Ad Matches ID ${req.body.id}` });
     }
-    user.favouriteAds.push(ad);
-    const result = await user.save();
+    const result = await ad.deleteOne({ _id: req.body.id });
     res.status(200).json(result);
   } catch (err) {
     res.status(404).json({ message: err.message });
   }
 };
 
-const removeFromFavourites = async (req, res) => {
+const updateAd = async (req, res) => {
   try {
-    const { userId, adId } = req.body;
-
-    const user = await User.findOne({ _id: userId }).exec();
-    if (!user) {
-      return res.status(204).json({ message: `No User Matches ID ${userId}` });
-    }
-    const ad = await Ad.findOne({ _id: adId }).exec();
-    if (!ad) {
-      return res.status(204).json({ message: `No User Matches ID ${adId}` });
-    }
-    user.favouriteAds = user.favouriteAds.filter((item) => {
-      return item !== ad;
-    });
-    const result = await user.save();
-    res.status(200).json(result);
   } catch (err) {
-    res.status(404).json({ message: err.message });
+    res.status(404).json({ messages: err.message });
   }
 };
-
-const checkFavouriteAds = (req,res) => {
-
-  
-}
 
 module.exports = {
   createAd,
   getFeedAds,
   searchFeedAds,
   searchAdsByCategory,
+  searchAdsByCity,
   getAdsByUser,
-  addToFavourites,
-  removeFromFavourites,
+  deleteAd,
 };

@@ -1,48 +1,77 @@
 const Message = require("./../models/Message");
+const User = require("./../models/User");
 
-const getMessages = async (req, res, next) => {
+const saveMessageToDB = async (req, res) => {
+  const { senderid, message, roomid, recieverid } = req.body;
+  console.log("MESSAGE RECEIVED - ", req.body);
   try {
-    const { from, to } = req.body;
-    const messages = await Message.find({
-      users: {
-        $all: [from, to],
-      },
-    }).sort({ updatedAt: 1 });
-
-    const projectedMessages = messages.map((msg) => {
-      return {
-        fromSelf: msg.sender.toString() === from,
-        message: msg.message.text,
-      };
-    });
-
-    res.json(projectedMessages);
-  } catch (err) {
-    next(err);
-  }
-};
-
-const addMessage = async (req, res, next) => {
-  try {
-    const { from, to, message } = req.body;
     const newMessage = new Message({
-      message: {
-        text: message,
-      },
-      users: [from, to],
-      sender: [from],
+      senderid,
+      message,
+      roomid,
+      recieverid,
     });
-
-    const savedData = await newMessage.save();
-
-    if (savedData) {
-      return res.json({ message: "Message Added Successfully!" });
-    } else {
-      return res.json({ message: "Failed To Add Message To The Database" });
-    }
+    await newMessage.save();
+    res.send({ message: "Message saved successfully" });
   } catch (err) {
-    next(err);
+    res.status(422).send(err.message);
   }
 };
 
-module.exports = { getMessages, addMessage };
+const getMessages = async (req, res) => {
+  const { roomid } = req.body;
+  console.log("ROOM ID RECEIVED - ", roomid);
+
+  Message.find({ roomid: roomid })
+    .then((messages) => {
+      res.status(200).send(messages);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
+
+const setUserMessages = async (req, res) => {
+  try {
+    const { message, roomid, senderid, recieverid } = req.body;
+    console.log("MESSAGE ID RECEIVED - ", recieverid);
+    const user = await User.findOne({ _id: senderid }).exec();
+
+    if (user.allmessages.length) {
+      user.allmessages.map((item) => {
+        if (item.recieverid === recieverid) {
+          user.allmessages.pull(item);
+        }
+      });
+    }
+    const date = Date.now();
+    user.allmessages.push({ senderid, recieverid, message, roomid, date });
+
+    await user.save();
+    // await otherUser.save();
+    res.status(200).send({ message: "Message saved successfully" });
+  } catch (err) {
+    console.log(err);
+    res.status(422).send(err.message);
+  }
+};
+
+const getUserMessages = async (req, res) => {
+  const { userid } = req.body;
+  console.log("USER ID RECEIVED - ", userid);
+  User.findOne({ _id: userid })
+    .then((user) => {
+      res.status(200).send(user.allmessages);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(422).send(err.message);
+    });
+};
+
+module.exports = {
+  getMessages,
+  getUserMessages,
+  setUserMessages,
+  saveMessageToDB,
+};

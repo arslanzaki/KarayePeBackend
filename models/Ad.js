@@ -10,13 +10,23 @@ const adSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    latitude: {
+    city: {
       type: String,
-      default: "",
+      required: true,
     },
-    longitude: {
+    address: {
       type: String,
-      default: "",
+      required: true
+    },
+    location: {
+      latitude: {
+        type: String,
+        default: ""
+      },
+      longitude: {
+        type: String,
+        default: ""
+      }
     },
     title: {
       type: String,

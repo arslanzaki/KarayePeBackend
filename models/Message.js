@@ -1,24 +1,29 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
-const MessageSchema = mongoose.Schema(
-  {
-    message: {
-      text: {
+
+const messageSchema = new mongoose.Schema({
+    senderid: {
         type: String,
-        required: true,
-      },
+        required: true
     },
-    users: Array,
-    sender: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+    message:{
+        type: String,
     },
-  },
-  {
-    timestamps: true,
-  }
-);
+    roomid:{
+        type: String,
+        required: true
+    },
+    recieverid:{
+        type: String,
+        required: true
+    }
+},{
+    timestamps: true
+})
 
-const Message = mongoose.model("Message", MessageSchema);
+
+
+
+const Message = mongoose.model("Message", messageSchema);
 module.exports = Message;

@@ -13,6 +13,13 @@ const verifyToken = require("./middleware/auth");
 const { fileURLToPath } = require("url");
 const socket = require("socket.io");
 const { setProfilePicture } = require("./controllers/auth");
+const { createServer } = require("http");
+const { Server } = require("socket.io");
+
+const httpServer = createServer();
+
+
+const io = new Server(httpServer, { /* options */ });
 
 // CONFIGURATIONS
 
@@ -46,31 +53,30 @@ app.use("/messages", messageRoutes);
 
 const PORT = process.env.PORT || 6000;
 
+app.listen(PORT, console.log(`Server Port: ${PORT}`));
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => {
-    const server = app.listen(PORT, console.log(`Server Port: ${PORT}`));
-    const io = socket(server, {
-      cors: {
-        origin: "http://localhost:3000",
-        credentials: true,
-      },
-    });
-    global.onlineUsers = new Map();
-    io.on("connection", (socket) => {
-      global.chatSocket = socket;
-      socket.on("add-user", (userId) => {
-        onlineUsers.set(userId, socket.id);
-      });
-      socket.on("send-msg", (data) => {
-        const sendUserSocket = onlineUsers.get(data.io);
-        if (sendUserSocket) {
-          socket.to(sendUserSocket).emit("msg-recieve", data.msg);
-        }
-      });
-    });
-  })
-  .catch((err) => console.log(err));
+  .then(() => console.log("Database Connected"));
+
+io.on("connection", (socket) => {
+  console.log("USER CONNECTED - ", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("USER DISCONNECTED - ", socket.id);
+  });
+
+  socket.on("join_room", (data) => {
+    console.log("USER WITH ID - ", socket.id, "JOIN ROOM - ", data.roomid);
+    socket.join(data);
+  });
+
+  socket.on("send_message", (data) => {
+    console.log("MESSAGE RECEIVED - ", data);
+    io.emit("receive_message", data);
+  });
+});
+
+httpServer.listen(3001);
